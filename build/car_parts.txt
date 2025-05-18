@@ -1,6 +1,0 @@
-Car Parts List:
-- Body
-- Engine
-- Wheels
-- Lights
-- Transmission
