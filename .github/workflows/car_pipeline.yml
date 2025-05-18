@@ -21,7 +21,11 @@ jobs:
           ls -la scripts/
         
       - name: 🏭 Build car
-        run: ./scripts/build_car.sh
+        run: |
+          echo "Starting build process..."
+          ./scripts/build_car.sh
+          echo "Build artifacts:"
+          ls -la build/
         shell: bash
         
       - name: 📦 Upload artifacts
@@ -30,6 +34,7 @@ jobs:
           name: car-parts
           path: build/
           retention-days: 1
+          if-no-files-found: error
 
   test:
     needs: build
@@ -43,9 +48,13 @@ jobs:
           
       - name: 🔍 Test car components
         run: |
-          echo "Contents of build directory:"
+          echo "Build directory contents:"
           ls -la build/
-          ./scripts/test_car.sh || exit 1
+          echo "-----------------------"
+          echo "Running tests..."
+          ./scripts/test_car.sh
+          echo "-----------------------"
+          echo "Tests completed successfully"
         shell: bash
         
       - name: 📝 Upload test results
@@ -53,4 +62,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: test-results
-          path: build/car_parts.txt
+          path: |
+            build/car_parts.txt
+            scripts/test_car.sh
+          retention-days: 3
