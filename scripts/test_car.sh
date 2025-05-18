@@ -1,9 +1,22 @@
-#!/bin/bash
-echo "🧪 Testing car..."
-for part in Body Engine Wheels; do
-  if ! grep -q "- $part" build/car_parts.txt; then
-    echo "❌ Missing $part!"
+#!/usr/bin/env bash
+set -euo pipefail
+
+declare -a REQUIRED_PARTS=("Body" "Engine" "Wheels" "Lights" "Transmission")
+
+echo "🧪 Testing car components..."
+echo "-----------------------------"
+
+for part in "${REQUIRED_PARTS[@]}"; do
+  if grep -q "- $part" build/car_parts.txt; then
+    echo "✔ Found $part"
+  else
+    echo "❌ ERROR: Missing $part!"
+    echo "Current parts list:"
+    cat build/car_parts.txt
     exit 1
   fi
 done
-echo "✅ All parts found!"
+
+echo "-----------------------------"
+echo "✅ All parts verified successfully!"
+exit 0

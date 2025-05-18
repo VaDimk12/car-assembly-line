@@ -8,30 +8,49 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       
-      - name: 🛠️ Set up permissions
-        run: chmod +x scripts/*.sh
+      - name: 🔧 Set up environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dos2unix
+          dos2unix scripts/*
+          chmod +x scripts/*.sh
+          ls -la scripts/
         
-      - name: 🏗️ Build car
+      - name: 🏭 Build car
         run: ./scripts/build_car.sh
         shell: bash
         
-      - uses: actions/upload-artifact@v3
+      - name: 📦 Upload artifacts
+        uses: actions/upload-artifact@v3
         with:
           name: car-parts
           path: build/
+          retention-days: 1
 
   test:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     steps:
       - uses: actions/download-artifact@v3
         with:
           name: car-parts
           path: build/
           
-      - name: 🔍 Test car
-        run: ./scripts/test_car.sh
+      - name: 🔍 Test car components
+        run: |
+          echo "Contents of build directory:"
+          ls -la build/
+          ./scripts/test_car.sh || exit 1
         shell: bash
+        
+      - name: 📝 Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: build/car_parts.txt
