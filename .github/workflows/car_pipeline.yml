@@ -23,21 +23,29 @@ jobs:
       - name: 🏭 Build car
         run: |
           echo "Starting build process..."
-          ./scripts/build_car.sh
-          echo "Build artifacts:"
+          ./scripts/build_car.sh || exit 1
+          echo "Verifying build artifacts..."
+          if [ ! -f "build/car_parts.txt" ]; then
+            echo "❌ Error: car_parts.txt was not created!"
+            ls -la build/ || echo "Build directory doesn't exist"
+            exit 1
+          fi
+          echo "Build contents:"
+          cat build/car_parts.txt
+          echo "-----------------------"
           ls -la build/
-        shell: bash
         
       - name: 📦 Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           name: car-parts
-          path: build/
+          path: build/car_parts.txt  # Явно вказуємо файл
           retention-days: 1
           if-no-files-found: error
 
   test:
     needs: build
+    if: success()  # Запускати тільки при успішному build
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
@@ -50,19 +58,17 @@ jobs:
         run: |
           echo "Build directory contents:"
           ls -la build/
+          echo "File contents:"
+          cat build/car_parts.txt
           echo "-----------------------"
           echo "Running tests..."
-          ./scripts/test_car.sh
+          ./scripts/test_car.sh || exit 1
           echo "-----------------------"
           echo "Tests completed successfully"
-        shell: bash
         
       - name: 📝 Upload test results
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: test-results
-          path: |
-            build/car_parts.txt
-            scripts/test_car.sh
-          retention-days: 3
+          path: build/car_parts.txt
